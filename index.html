@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Local IP Address</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .ip-address {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Local IP Address</h1>
+        <div class="ip-address" id="ipAddress">Loading...</div>
+    </div>
+
+    <script>
+        // This will be updated by main.py
+        const ipAddress = "192.168.10.186";
+        document.getElementById('ipAddress').textContent = ipAddress;
+    </script>
+</body>
+</html>
