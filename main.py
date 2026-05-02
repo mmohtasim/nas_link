@@ -13,22 +13,18 @@ def get_local_ipv4_address():
         hostname = socket.gethostname()
         ip_address = socket.gethostbyname(hostname)
 
-        # If we got a localhost address, try to find the actual local IP
+        # If we got a localhost address, try to find the actual local IP from eth3
         if ip_address.startswith("127.") or ip_address == "0.0.0.0":
-            import netifaces
-
-            interfaces = netifaces.interfaces()
-            for interface in interfaces:
-                addrs = netifaces.ifaddresses(interface)
-                if netifaces.AF_INET in addrs:
-                    for addr_info in addrs[netifaces.AF_INET]:
-                        ip = addr_info.get("addr")
-                        if (
-                            ip
-                            and not ip.startswith("127.")
-                            and not ip.startswith("169.254")
-                        ):
-                            return ip
+            result = subprocess.run(
+                ["ip", "-4", "addr", "show", "eth3"],
+                capture_output=True, text=True
+            )
+            for line in result.stdout.splitlines():
+                match = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", line)
+                if match:
+                    ip = match.group(1)
+                    if not ip.startswith("127.") and not ip.startswith("169.254"):
+                        return ip
 
         return ip_address
     except Exception as e:
