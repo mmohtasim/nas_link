@@ -88,7 +88,7 @@ def git_push():
         subprocess.run(["git", "commit", "-m", f"Update IP address"], check=True)
 
         # Push to remote repository
-        subprocess.run(["git", "push", "origin", "master"], check=True)
+        subprocess.run(["git", "push", "origin", "main"], check=True)
         print("Successfully pushed changes to GitHub")
     except subprocess.CalledProcessError as e:
         if e.returncode == 128:  # No git repository
