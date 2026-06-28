@@ -2,47 +2,520 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Local IP Address</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAS Link — Access Your Network Storage</title>
+    <meta name="description" content="Quick-access portal to your local NAS. Always shows the current IP address.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --glass-bg: rgba(17, 24, 39, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-gradient: linear-gradient(135deg, #3b82f6, #06b6d4, #10b981);
+            --glow-blue: rgba(59, 130, 246, 0.3);
+            --glow-cyan: rgba(6, 182, 212, 0.15);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
+            overflow: hidden;
+            position: relative;
         }
+
+        /* Animated gradient background */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-gradient::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow-blue) 0%, transparent 70%);
+            top: -10%;
+            left: -5%;
+            animation: float-1 18s ease-in-out infinite;
+        }
+
+        .bg-gradient::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow-cyan) 0%, transparent 70%);
+            bottom: -15%;
+            right: -10%;
+            animation: float-2 22s ease-in-out infinite;
+        }
+
+        @keyframes float-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(80px, 60px) scale(1.1); }
+            66% { transform: translate(-40px, 30px) scale(0.95); }
+        }
+
+        @keyframes float-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-60px, -50px) scale(1.05); }
+            66% { transform: translate(50px, -30px) scale(0.9); }
+        }
+
+        /* Grid pattern overlay */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
         .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 520px;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
             text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 32px;
         }
-        h1 {
-            color: #333;
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: var(--accent-gradient);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px var(--glow-blue);
+            animation: pulse-glow 4s ease-in-out infinite;
         }
-        .ip-address {
-            font-size: 1.5rem;
-            color: #2c3e50;
-            margin: 1rem 0;
-            padding: 1rem;
-            background-color: #ecf0f1;
-            border-radius: 4px;
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 4px 20px var(--glow-blue); }
+            50% { box-shadow: 0 4px 32px var(--glow-blue), 0 0 48px var(--glow-cyan); }
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Main card */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-card);
+            animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Status indicator */
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            animation: blink 2.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .status-text {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-emerald);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        /* IP display */
+        .ip-section {
+            margin-bottom: 28px;
+        }
+
+        .ip-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+        }
+
+        .ip-value {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+
+        /* Open NAS button */
+        .open-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 24px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .open-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .open-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35);
+        }
+
+        .open-btn:hover::before {
+            opacity: 1;
+        }
+
+        .open-btn:active {
+            transform: translateY(0);
+        }
+
+        .open-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.25s ease;
+        }
+
+        .open-btn:hover svg {
+            transform: translateX(3px);
+        }
+
+        /* Copy button */
+        .copy-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+        }
+
+        .copy-ip {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .copy-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Footer info */
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer .updated-time {
+            margin-top: 4px;
+            color: var(--text-muted);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .card {
+                padding: 28px 22px;
+            }
+            .ip-value {
+                font-size: 1.6rem;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
     <div class="container">
-        <h1>Your Local IP Address</h1>
-        <div class="ip-address" id="ipAddress">Loading...</div>
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/>
+                    <line x1="6" y1="18" x2="6.01" y2="18"/>
+                </svg>
+            </div>
+            <h1>NAS Link</h1>
+            <p>Your network storage, one click away</p>
+        </div>
+
+        <div class="card">
+            <div class="status-row">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="status-text" id="statusText">Online</span>
+            </div>
+
+            <div class="ip-section">
+                <div class="ip-label">Local IP Address</div>
+                <div class="ip-value" id="ipDisplay">—</div>
+            </div>
+
+            <a class="open-btn" id="openNasBtn" href="#" target="_blank" rel="noopener">
+                Open NAS Dashboard
+                <svg viewBox="0 0 24 24">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                </svg>
+            </a>
+
+            <div class="copy-row">
+                <span class="copy-ip" id="copyIpText">—</span>
+                <button class="copy-btn" id="copyBtn" onclick="copyIp()">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div>Automatically synced via GitHub</div>
+            <div class="updated-time" id="updatedTime"></div>
+        </div>
     </div>
 
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
     <script>
-        // This will be updated by main.py
+        // These values are updated by main.py — do not rename
         const ipAddress = "192.168.10.186";
-        document.getElementById('ipAddress').textContent = ipAddress;
+        const lastUpdated = "2026-06-28T12:36:00+06:00";
+
+        // Populate the UI
+        const ipDisplay = document.getElementById('ipDisplay');
+        const copyIpText = document.getElementById('copyIpText');
+        const openNasBtn = document.getElementById('openNasBtn');
+        const updatedTime = document.getElementById('updatedTime');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        if (ipAddress && ipAddress !== '—') {
+            ipDisplay.textContent = ipAddress;
+            copyIpText.textContent = `http://${ipAddress}`;
+            openNasBtn.href = `http://${ipAddress}`;
+
+            // Format the updated time
+            if (lastUpdated) {
+                const date = new Date(lastUpdated);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                let timeAgo;
+                if (diffMins < 1) timeAgo = 'Just now';
+                else if (diffMins < 60) timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+                else if (diffHours < 24) timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                else timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+
+                updatedTime.textContent = `Last updated: ${timeAgo}`;
+            }
+        } else {
+            ipDisplay.textContent = 'Unavailable';
+            statusDot.style.background = '#ef4444';
+            statusDot.style.boxShadow = '0 0 8px rgba(239, 68, 68, 0.6)';
+            statusText.textContent = 'Offline';
+            statusText.style.color = '#ef4444';
+            openNasBtn.style.opacity = '0.4';
+            openNasBtn.style.pointerEvents = 'none';
+        }
+
+        function copyIp() {
+            navigator.clipboard.writeText(`http://${ipAddress}`).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+
+                // Update button text temporarily
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+                setTimeout(() => {
+                    btn.innerHTML = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+                }, 2000);
+            });
+        }
     </script>
 </body>
 </html>

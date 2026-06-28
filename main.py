@@ -1,12 +1,14 @@
 import socket
 import re
 import subprocess
-import os
+import sys
+from datetime import datetime, timezone
 
 
 def get_local_ipv4_address():
     """
     Retrieves the local IPv4 address of the machine.
+    Returns the IP as a string, or None if detection fails.
     """
     try:
         # Get all network interfaces
@@ -29,12 +31,13 @@ def get_local_ipv4_address():
         return ip_address
     except Exception as e:
         print(f"Error getting IP address: {e}")
-        return "Could not resolve hostname to IP address."
+        return None
 
 
 def update_index_html(ip_address):
     """
-    Updates the index.html file with the current local IP address.
+    Updates the index.html file with the current local IP address
+    and the current timestamp.
     """
     try:
         # Read the file content
@@ -46,6 +49,12 @@ def update_index_html(ip_address):
             r'const ipAddress = ".*?";', f'const ipAddress = "{ip_address}";', content
         )
 
+        # Replace the lastUpdated timestamp
+        now = datetime.now(timezone.utc).astimezone().isoformat()
+        updated_content = re.sub(
+            r'const lastUpdated = ".*?";', f'const lastUpdated = "{now}";', updated_content
+        )
+
         # Write the updated content back to the file
         with open("index.html", "w", encoding="utf-8") as f:
             f.write(updated_content)
@@ -53,21 +62,21 @@ def update_index_html(ip_address):
         print(f"Updated index.html with IP address: {ip_address}")
     except FileNotFoundError:
         print("Error: index.html file not found")
+        sys.exit(1)
     except PermissionError:
         print("Error: Permission denied when trying to write to index.html")
+        sys.exit(1)
     except Exception as e:
         print(f"Error updating index.html: {e}")
+        sys.exit(1)
 
 
-def git_push():
+def git_push(ip_address):
     """
     Pushes the updated index.html to GitHub repository.
     Skips commit and push if no changes detected.
     """
     try:
-        # Check if git is available
-        subprocess.run(["git", "--version"], check=True, capture_output=True)
-
         # Add the changed file
         subprocess.run(["git", "add", "index.html"], check=True)
 
@@ -80,34 +89,34 @@ def git_push():
             print("No changes detected, skipping commit and push")
             return
 
-        # Commit with a message
-        subprocess.run(["git", "commit", "-m", f"Update IP address"], check=True)
+        # Commit with a descriptive message including the IP
+        subprocess.run(
+            ["git", "commit", "-m", f"Update IP to {ip_address}"],
+            check=True
+        )
 
         # Push to remote repository
         subprocess.run(["git", "push", "origin", "main"], check=True)
         print("Successfully pushed changes to GitHub")
     except subprocess.CalledProcessError as e:
-        if e.returncode == 128:  # No git repository
-            print("Error: Not a git repository or git not installed")
-        else:
-            print(f"Git error: {e}")
+        print(f"Git error: {e}")
+        sys.exit(1)
     except Exception as e:
         print(f"Error during git push: {e}")
+        sys.exit(1)
 
 
 def main():
     """
     Main function that updates the local IP address and pushes to GitHub.
     """
-    try:
-        ip_address = get_local_ipv4_address()
-        if ip_address != "Could not resolve hostname to IP address.":
-            update_index_html(ip_address)
-            git_push()
-        else:
-            print("Could not determine local IP address")
-    except Exception as e:
-        print(f"Error: {e}")
+    ip_address = get_local_ipv4_address()
+    if ip_address is None:
+        print("Could not determine local IP address")
+        sys.exit(1)
+
+    update_index_html(ip_address)
+    git_push(ip_address)
 
 
 if __name__ == "__main__":
